@@ -1,0 +1,58 @@
+import { Router } from "express";
+const router = Router();
+import{signup, login, confirmEmail, signupWithGmail, resendconfirmEmail, forgetPassword, confirmForgetPasswordCode, resetForgotPassword, verifyLoginOTP} from './authService.js'
+import{successResponse} from '../../common/utils/successResponse.js'
+import { authentication, validation } from "../../middelWare/index.js";
+import * as validators from './authentication.validation.js'
+import { BadException } from "../../common/exceptions/error.exceptions.js";
+
+
+router.post("/signup",validation(validators.signup),async(req,res,next)=>{
+    const user = await signup(req.body)
+    successResponse({res, status:201, data : user , message :"user added ❤️"})
+})
+router.post("/verify-login-otp", validation(validators.confirmEmail),async (req, res, next) => {
+    const data = await verifyLoginOTP(req.body,`${req.protocol}://${req.host}` );
+    successResponse({res,status: 200,data,message: "Login successful"});
+});
+
+
+router.post("/signup-with-gmail", async (req, res, next) => {
+    const {status , data} = await signupWithGmail(req.body , `${req.protocol}://${req.host}`);
+    successResponse({ res, status, data});
+});
+router.patch("/resendconfirm-email" ,validation(validators.resendconfirmEmail) ,  async(req,res,next)=>{
+    const data = await resendconfirmEmail(req.body);
+    successResponse({res, status:200, data })
+})
+
+router.patch("/confirm-email" ,validation(validators.confirmEmail) ,  async(req,res,next)=>{
+    const data = await confirmEmail(req.body);
+    successResponse({res, status:200, data , message :"email confirmed successfuly "})
+})
+
+router.post("/forget-password",validation(validators.resendconfirmEmail), async (req, res, next) => {
+    const data = await forgetPassword(req.body);
+    successResponse({ res, status : 201, data});
+});
+
+
+router.post("/confirm-forgetPassCode" ,validation(validators.confirmEmail) ,  async(req,res,next)=>{
+    const data = await confirmForgetPasswordCode(req.body);
+    successResponse({res, status:200, data })
+})
+
+router.patch("/reset-forget-password" ,validation(validators.resetPassword) ,  async(req,res,next)=>{
+    const data = await resetForgotPassword(req.body);
+    successResponse({res, status:200, data })
+})
+
+
+
+
+router.post("/login",validation(validators.login),async(req,res,next)=>{
+    const user = await login(req.validate.body, `${req.protocol}://${req.host}`)
+    successResponse({res, status:201, data : user})
+})
+
+export default router
