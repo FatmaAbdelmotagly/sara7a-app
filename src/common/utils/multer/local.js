@@ -1,6 +1,6 @@
 import multer from "multer";
 import { randomUUID } from "node:crypto";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile ,rename,rm} from "node:fs/promises";
 import { resolve } from "node:path";
 import { fileTypeFromBuffer } from "file-type";
 import { BadException } from "../../exceptions/error.exceptions.js";
@@ -46,17 +46,70 @@ export const processFile = async ({
   validation = [],
 }) => {
   const result = await fileTypeFromBuffer(file.buffer);
-
+console.log("Original Name:", file.originalname);
+console.log("Multer Mime:", file.mimetype);
+console.log("Detected Type:", result);
   if (!result || !validation.includes(result.mime)) {
     throw BadException("invalid file format");
-  } else {
-    mkdir(resolve(`./assets/${customPath}`), { recursive: true });
-    const uniqepath = `assets/${customPath}/${randomUUID()}.${result.ext}`;
-    await writeFile(resolve(`./${uniqepath}`), file.buffer);
-    file.path = uniqepath;
   }
 
-  return file;
+  const tempPath = `temp/${customPath}/${randomUUID()}.${result.ext}`;
+  file.path = tempPath;
+
+  try {
+    await mkdir(resolve(`./temp/${customPath}`), {
+      recursive: true,
+    });
+
+    await writeFile(resolve(`./${tempPath}`), file.buffer);
+
+    return file;
+
+  } catch (error) {
+    await rm(resolve(`./${tempPath}`), {
+      force: true,
+    });
+
+    throw error;
+  }
+};
+
+export const rollbackFiles = async (files = []) => {
+  for (const file of files) {
+    if (file.path) {
+      await rm(resolve(`./${file.path}`), {
+        force: true,
+      });
+    }
+  }
+};
+
+export const commitFiles = async (files = []) => {
+  const committedFiles = [];
+
+  try {
+    for (const file of files) {
+      const finalPath = file.path.replace("temp/", "assets/");
+
+      await mkdir(resolve(finalPath, ".."), {
+        recursive: true,
+      });
+
+      await rename(
+        resolve(`./${file.path}`),
+        resolve(`./${finalPath}`)
+      );
+
+      committedFiles.push(finalPath);
+      file.path = finalPath;
+    }
+  } catch (error) {
+    for (const path of committedFiles) {
+      await rm(resolve(`./${path}`), { force: true });
+    }
+
+    throw error;
+  }
 };
 export const processFiles = async ({ customPath, files, validation = [] }) => {
   const assets = [];
@@ -83,32 +136,41 @@ export const processFields = async ({
   return assets;
 };
 export const processMulterUpload = async ({
-    req,
-    customPath = "general",
-    validation = []
+  req,
+  customPath = "general",
+  validation = [],
 }) => {
-    if (req.file) {
-        await processFile({
-            customPath,
-            file: req.file,
-            validation
-        });
-    } else if (Array.isArray(req.files)) {
-        await processFiles({
-            customPath,
-            files: req.files,
-            validation
-        });
-    } else if (
-        typeof req.files == "object" &&
-        Object.keys(req.files)?.length
-    ) {
-        await processFields({
-            customPath,
-            fields: req.files,
-            validation
-        });
+  let files = [];
+
+  if (req.file) {
+    files = [req.file];
+  } else if (Array.isArray(req.files)) {
+    files = req.files;
+  } else if (
+    typeof req.files === "object" &&
+    req.files
+  ) {
+    files = Object.values(req.files).flat();
+  }
+
+  const processedFiles = [];
+
+  try {
+    for (const file of files) {
+     processedFiles.push(file);
+
+await processFile({
+  customPath,
+  file,
+  validation,
+});
     }
+    await commitFiles(processedFiles);
+
+  } catch (error) {
+    await rollbackFiles(processedFiles);
+    throw error;
+  }
 };
 
 export const uploadMiddleware = ({

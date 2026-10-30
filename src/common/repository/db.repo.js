@@ -75,6 +75,9 @@ export const find = async ({
   if (options.populate) {
     query = query.populate(options.populate);
   }
+  if (options.sort) {
+    query = query.sort(options.sort);
+  }
 
   if (options.skip) {
     query = query.skip(options.skip);
@@ -90,6 +93,35 @@ export const find = async ({
 
   return await query.exec();
 };
+export const countDocuments = async ({
+  filter = {},
+  model,
+} = {}) => {
+ return await model.countDocuments(filter);
+ 
+};
+export const paginate = async ({
+  filter = {},
+  options = {},
+page = 1,
+limit = 5 ,
+  model,
+} = {}) => {
+       const skip = (page -1 )*limit
+ const docs = await countDocuments({model, filter})/limit
+ const count = Math.ceil(docs/limit)
+  const messages = await find({
+     model,
+     filter,
+     options:{
+      ...options,
+      limit , 
+      skip
+     }
+   });
+ return {count  ,docs , currentPage : page  ,  messages}
+};
+
 
 //insertMany
 export const insertMany = async ({ data, model }) => {

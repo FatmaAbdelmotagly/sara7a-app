@@ -1,4 +1,4 @@
-import mongoose from 'mongoose'
+import mongoose, { Query } from 'mongoose'
 import {file, optional, z} from 'zod'
 import { generalValidationFields } from '../../common/validation.js'
 
@@ -20,4 +20,24 @@ export const createMessage =(lang)=>{
         }
     })
 
+}
+
+export const deleteMessage =(lang)=>{
+    return z.object({
+        params : z.object({
+            messageId: generalValidationFields.Id(lang),
+        })
+})
+}
+
+
+
+export const allMessage =(lang)=>{
+    return z.object({
+        query : z.strictObject({
+            type: z.enum(["0", "1", "2"]).default("0"),
+            page : z.coerce.number().default(1),
+            limit : z.coerce.number().default(5)
+        })
+})
 }
