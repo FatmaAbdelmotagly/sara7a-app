@@ -1,6 +1,7 @@
  
  import {z} from'zod'
 import { GenderEnum, LangEnum } from './enum/index.js'
+import mongoose from 'mongoose';
 
 
 const matchFields = ({ original, copy, data, ctx, lang }) => {
@@ -25,6 +26,18 @@ const matchFields = ({ original, copy, data, ctx, lang }) => {
     gender : z.enum(GenderEnum),
     otp : z.string().regex(/^\d{6}$/ , {error:"invalid code"}),
     confirmPassword : z.string().regex(/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*\s)(?=.*[!@#$%^_&*()]).{8,16}/) ,
+   Id : (lang)=>{ return z.string().refine((data)=>{return mongoose.Types.ObjectId.isValid(data)},{message : "invalid format"})},
+   file : (lang)=>{
+   return z.strictObject({
+        fieldname : z.string(),
+        originalname : z.string(),
+        encoding : z.string(),
+        mimetype : z.string(),
+        buffer : z.instanceof(Buffer),
+        size : z.number(),
+        path :z.string() 
+    })}
+   ,
     matchFields 
     
  }

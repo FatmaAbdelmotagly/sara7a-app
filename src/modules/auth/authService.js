@@ -203,7 +203,8 @@ export const resendconfirmEmail = async ({ email }) => {
     },
   });
 
-  if (!account) throw new notFoundException("Invalid account");
+
+  if (!account) throw  notFoundException("Invalid account");
 await sendEmailOTP({email , subject : EmailSubjectEnum.CONFIRM_EMAIL})
 
   return;
@@ -264,19 +265,17 @@ export const resetForgotPassword = async ({ otp, email, password }) => {
 
 
 
-
-
-
 export const login = async ({ email, password }, issuer) => {
   const blockedTime = await ttl({
-  key: LoginBlockKey({ email }),
-});
+    key: LoginBlockKey({ email }),
+  });
 
-if (blockedTime > 0) {
-  throw TooManyRequsetException(
-    `Too many login attempts. Try again after ${blockedTime} seconds`
-  );
-}
+  if (blockedTime > 0) {
+    throw TooManyRequsetException(
+      `Too many login attempts. Try again after ${blockedTime} seconds`
+    );
+  }
+
   const account = await findOne({
     model: UserModel,
     filter: {
@@ -285,47 +284,108 @@ if (blockedTime > 0) {
       confirmEmail: { $exists: true },
     },
   });
-  if (!account)
-    throw notFoundException("Invalid login data", { extra: "kll" });
+console.log("Account:", account);
+  if (!account) {
+    throw notFoundException("Invalid login data");
+  }
 
   const match = await compare(password, account.password);
-  console.log({
-    password,
-    hash: account.password,
-    match,
+console.log("Password match:", match);
+  if (!match) {
+    const attemptsKey = LoginAttemptsKey({ email });
+    const attempts = await incBy({ key: attemptsKey });
+
+    if (attempts === 1) {
+      await expire({ key: attemptsKey, ttl: 10 });
+    }
+
+    if (attempts >= 5) {
+      await set({
+        key: LoginBlockKey({ email }),
+        value: 1,
+        ttl: 300,
+      });
+
+      await del({ key: attemptsKey });
+
+      throw TooManyRequsetException(
+        "Too many login attempts. Try again after 5 minutes"
+      );
+    }
+
+    throw notFoundException("Invalid login data");
+  }
+
+  await del({ key: LoginAttemptsKey({ email }) });
+
+  return createLoginCredentials({
+    user: account,
+    issuer,
+  });
+};
+
+export const loginWith2Step = async ({ email, password }) => {
+  const blockedTime = await ttl({
+    key: LoginBlockKey({ email }),
   });
 
-  // if (!match) throw notFoundException("Invalid login data", { extra: "kll" });
-
-  if (!match) {
-  const attemptsKey = LoginAttemptsKey({ email });
-  const attempts = await incBy({
-    key: attemptsKey});
-  if (attempts === 1) {
-    await expire({ key: attemptsKey,ttl: 10,
-    });
-  }
-  if (attempts >= 5) {
-    await set({ key: LoginBlockKey({ email }),value: 1, ttl: 300,});
-    await del({ key: attemptsKey });
+  if (blockedTime > 0) {
     throw TooManyRequsetException(
-      "Too many login attempts. Try again after 5 minutes"
+      `Too many login attempts. Try again after ${blockedTime} seconds`
     );
   }
-  throw notFoundException("Invalid login data");
-}
 
-  // return createLoginCredentials({ user: account, issuer });
+  const account = await findOne({
+    model: UserModel,
+    filter: {
+      email,
+      provider: ProviderEnum.SYSTEM,
+      confirmEmail: { $exists: true },
+    },
+  });
+
+  if (!account) {
+    throw notFoundException("Invalid login data");
+  }
+
+  const match = await compare(password, account.password);
+
+  if (!match) {
+    const attemptsKey = LoginAttemptsKey({ email });
+    const attempts = await incBy({ key: attemptsKey });
+
+    if (attempts === 1) {
+      await expire({ key: attemptsKey, ttl: 10 });
+    }
+
+    if (attempts >= 5) {
+      await set({
+        key: LoginBlockKey({ email }),
+        value: 1,
+        ttl: 300,
+      });
+
+      await del({ key: attemptsKey });
+
+      throw TooManyRequsetException(
+        "Too many login attempts. Try again after 5 minutes"
+      );
+    }
+
+    throw notFoundException("Invalid login data");
+  }
+
+  await del({ key: LoginAttemptsKey({ email }) });
+
   await sendEmailOTP({
-  email: account.email,
-  subject: EmailSubjectEnum.TWO_STEP_VERIFICATION,
-});
+    email: account.email,
+    subject: EmailSubjectEnum.TWO_STEP_VERIFICATION,
+  });
 
-return {
-  message: "OTP sent successfully, please check your email",
+  return {
+    message: "OTP sent successfully, please check your email",
+  };
 };
-};
-
 export const verifyLoginOTP = async ({ otp, email }, issuer) => {
   const account = await findOne({
   model: UserModel,

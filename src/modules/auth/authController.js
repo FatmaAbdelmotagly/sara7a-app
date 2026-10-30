@@ -1,6 +1,6 @@
 import { Router } from "express";
 const router = Router();
-import{signup, login, confirmEmail, signupWithGmail, resendconfirmEmail, forgetPassword, confirmForgetPasswordCode, resetForgotPassword, verifyLoginOTP} from './authService.js'
+import{signup, login, confirmEmail, signupWithGmail, resendconfirmEmail, forgetPassword, confirmForgetPasswordCode, resetForgotPassword, verifyLoginOTP, loginWith2Step} from './authService.js'
 import{successResponse} from '../../common/utils/successResponse.js'
 import { authentication, validation } from "../../middelWare/index.js";
 import * as validators from './authentication.validation.js'
@@ -49,10 +49,35 @@ router.patch("/reset-forget-password" ,validation(validators.resetPassword) ,  a
 
 
 
+router.post(
+  "/login",
+  validation(validators.login),
+  async (req, res, next) => {
+    const user = await login(
+      req.validate.body,
+      `${req.protocol}://${req.host}`
+    );
 
-router.post("/login",validation(validators.login),async(req,res,next)=>{
-    const user = await login(req.validate.body, `${req.protocol}://${req.host}`)
-    successResponse({res, status:201, data : user})
-})
+    successResponse({
+      res,
+      status: 200,
+      data: user,
+      message: "Login successful",
+    });
+  }
+);
+router.post(
+  "/login-with-2step",
+  validation(validators.login),
+  async (req, res, next) => {
+    const data = await loginWith2Step(req.validate.body);
+
+    successResponse({
+      res,
+      status: 200,
+      data,
+    });
+  }
+);
 
 export default router
