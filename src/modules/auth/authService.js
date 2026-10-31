@@ -28,7 +28,7 @@ const client = new OAuth2Client();
 
 
 
-const sendEmailOTP = async ({email , subject , maxTrials = 7 , blockInSeconds=300 })=>{
+const sendEmailOTP = async ({email , subject , maxTrials = 10 , blockInSeconds=300 })=>{
 
   const existOTP_ttl = await ttl({
     key: UserEmailKey({email , subject})

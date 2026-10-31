@@ -23,7 +23,7 @@ const messageSchema = mongoose.Schema({
         require :true
     }
 },{
-    Timestamp : true,
+    timestamps: true
     
 })
 

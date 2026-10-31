@@ -10,7 +10,7 @@ import { validation } from "../../middelWare/validation.middleware.js";
 import * as validators from "./message.validation.js";
 import { authentication } from "../../middelWare/authentication.middleware.js";
 import { decodeToken } from "../../common/security/token.securtiy.js";
-const router = Router({caseSensitive : true});
+const router = Router({caseSensitive : true , strict : true});
 const messageFolderName = "messages";
 
 router.post(

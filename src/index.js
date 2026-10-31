@@ -7,6 +7,8 @@ import { authController } from './modules/auth/index.js';
 import cors from 'cors'
 import { messageController } from './modules/message/index.js';
 import helmet from "helmet"
+import { identityRequestController } from './modules/identityRequest/index.js';
+import { conversationMssageController } from './modules/conversationMessages/index.js';
 
 var corsOptions = {
   origin: 'http://127.0.0.1:5500',
@@ -20,6 +22,8 @@ app.use(cors())
 app.use("/user",userController)
 app.use("/auth",authController)
 app.use("/message",messageController)
+app.use("/identityRequest",identityRequestController)
+app.use("/chat",conversationMssageController)
 await bootStrap(app,PORT)
 
 

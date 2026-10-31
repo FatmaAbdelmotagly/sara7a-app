@@ -10,20 +10,20 @@ export const createMessage = async ({content , recieverId}={} , files = [] , use
         model : UserModel,
         id: recieverId
     })
-    console.log({existResever});
-    
+    // console.log({existResever});
 
     if(!existResever){
-        throw notFoundException("invalid resever id ")
+        throw notFoundException("invalid reciever id ")
     }
+console.log({user});
 
     const message = await createOne({
         model : messageModel,
-        data : {
-            recieverId , 
+         data: {
+            recieverId,
             content,
-            attachment : files.map(ele => ele.path),
-            ...(user? {senderId : user._id} : {} )
+            attachment: files.map(ele => ele.path),
+            ...(user ? { senderId: user._id } : {})
         },
 
     })
@@ -38,12 +38,12 @@ export const deleteMessage = async ({messageId},user)=>{
     return data ;
 }
 
-
 export const getMessage = async ({messageId})=>{
       const data = await findOne({model : messageModel , filter : { _id : messageId}})
    if(!data){
     throw notFoundException("invalid message id ")
    }
+   console.log("Message from DB:", data.toObject());
     return data ;
 }
 export const getAllMessages = async ({type , page , limit}={},user)=>{

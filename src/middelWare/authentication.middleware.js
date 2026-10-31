@@ -11,6 +11,7 @@ export const authentication = (tokenType=TokenTypeEnum.ACCESS)=>{
       //console.log({authorization});
     
     if(!authorization){
+    
         throw UnauthorizedException("unaithorized account ")
     }
     req.headers.authorization = authorization
