@@ -1,2 +1,3 @@
-export * from './send.email.js'
-export * from './email.events.js'
+export * from "./send.email.js";
+export * from "./email.events.js";
+export * from "./email.templete.js";

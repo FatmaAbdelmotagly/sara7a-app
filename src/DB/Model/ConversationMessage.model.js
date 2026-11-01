@@ -1,28 +1,34 @@
 import mongoose from "mongoose";
 
-const conversationMessageSchema = new mongoose.Schema({
+const conversationMessageSchema = new mongoose.Schema(
+  {
     conversationId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Conversation",
-        required: true
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Conversation",
+      required: true,
     },
     senderId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-        required: true
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
     },
     content: {
-        type: String,
-        required: true,
-        minLength: 1,
-        maxLength: 50000
+      type: String,
+      required: true,
+      minLength: 1,
+      maxLength: 50000,
     },
     attachment: {
-        type: [String],
-        default: []
-    }
-}, {
-    timestamps: true
-});
+      type: [String],
+      default: [],
+    },
+  },
+  {
+    timestamps: true,
+  },
+);
 
-export const ConversationMessage = mongoose.model("ConversationMessage",conversationMessageSchema);
+export const ConversationMessage = mongoose.model(
+  "ConversationMessage",
+  conversationMessageSchema,
+);

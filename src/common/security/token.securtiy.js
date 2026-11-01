@@ -20,17 +20,17 @@ import { RoleEnum } from "../enum/userEnum.js";
 import { randomUUID } from "node:crypto";
 import { exists, set } from "../service/cache.service.js";
 
-export const userBaseKey = ({userID})=>{
-  return `User::${userID.toString()}`
-}
+export const userBaseKey = ({ userID }) => {
+  return `User::${userID.toString()}`;
+};
 
-export const userRevokTokenKey =  ({userID, jti})=>{
-  return  `${userBaseRevokTokenKey({userID})}${jti}`
-}
+export const userRevokTokenKey = ({ userID, jti }) => {
+  return `${userBaseRevokTokenKey({ userID })}${jti}`;
+};
 
-export const userBaseRevokTokenKey =  ({userID })=>{
-  return  `${userBaseKey({userID})}::Revoke_Token::`
-}
+export const userBaseRevokTokenKey = ({ userID }) => {
+  return `${userBaseKey({ userID })}::Revoke_Token::`;
+};
 
 export const createToken = async ({
   payLoad = {},
@@ -84,7 +84,6 @@ export const decodeToken = async ({
   tokenType = TokenTypeEnum.ACCESS,
 } = {}) => {
   const decoded = jwt.decode(authorization);
-  // console.log(decoded);
 
   if (!decoded?.aud?.length) {
     throw BadException("missing token payLoad");
@@ -99,15 +98,19 @@ export const decodeToken = async ({
     throw BadException("missing token payLoad ");
   }
 
-  if(await exists({key : userRevokTokenKey({userID : payLoad.sub , jti : payLoad.jti})})){
-      throw UnauthorizedException("Expired login credintials")
+  if (
+    await exists({
+      key: userRevokTokenKey({ userID: payLoad.sub, jti: payLoad.jti }),
+    })
+  ) {
+    throw UnauthorizedException("Expired login credintials");
   }
   const user = await findById({ model: UserModel, id: payLoad.sub });
   if (!user) {
     throw notFoundException("user not found ");
   }
-  if(user.changeCredintialTime?.getTime() ?? 0 > payLoad.iat * 1000){
-    throw UnauthorizedException ("Expired login credintials")
+  if (user.changeCredintialTime?.getTime() ?? 0 > payLoad.iat * 1000) {
+    throw UnauthorizedException("Expired login credintials");
   }
   return { user, payLoad };
 };
@@ -129,7 +132,7 @@ export const createLoginCredentials = async ({
       issuer,
       audience: [user.role],
       expiresIn: ACCESS_TOKEN_EXPIRES_IN,
-      jwtid
+      jwtid,
     },
   });
   const refreash_token = await createToken({
@@ -140,20 +143,21 @@ export const createLoginCredentials = async ({
       issuer,
       audience: [user.role],
       expiresIn: REFREASH_TOKEN_EXPIRES_IN,
-      jwtid
+      jwtid,
     },
   });
 
   return { access_token, refreash_token };
 };
 
-export const createRevokeToken = async (payload)=> {
-   const consumedTime = (Math.ceil(Date.now() / 1000 )- payload.iat)
-      const refreshExpiresIn = payload.iat + REFREASH_TOKEN_EXPIRES_IN
-      const ttl = refreshExpiresIn - consumedTime
-  
-      await set({key : userRevokTokenKey({userID : payload.sub , jti : payload.jti}) , value :payload.jti , ttl})
-     
-      
-}
+export const createRevokeToken = async (payload) => {
+  const consumedTime = Math.ceil(Date.now() / 1000) - payload.iat;
+  const refreshExpiresIn = payload.iat + REFREASH_TOKEN_EXPIRES_IN;
+  const ttl = refreshExpiresIn - consumedTime;
 
+  await set({
+    key: userRevokTokenKey({ userID: payload.sub, jti: payload.jti }),
+    value: payload.jti,
+    ttl,
+  });
+};

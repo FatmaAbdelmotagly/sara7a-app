@@ -47,37 +47,39 @@ export const confirmEmail = (lang) => {
   return z.object({
     body: z.strictObject({
       email: generalValidationFields.email(lang),
-      otp: generalValidationFields.otp
+      otp: generalValidationFields.otp,
     }),
     query: z.object({}),
     headers: z.object({}),
-    params: z.object({})
+    params: z.object({}),
   });
 };
 export const resetPassword = (lang) => {
   return z.object({
-    body: z.object({
-      email: generalValidationFields.email(lang),
-      otp: generalValidationFields.otp,
-      password: generalValidationFields.password,
-      confirmPassword: generalValidationFields.confirmPassword,
-    }).superRefine((data, ctx) => {
-      generalValidationFields.matchFields({
-        original: "password",
-        copy: "confirmPassword",
-        data,
-        ctx,
-      });
-    }),
+    body: z
+      .object({
+        email: generalValidationFields.email(lang),
+        otp: generalValidationFields.otp,
+        password: generalValidationFields.password,
+        confirmPassword: generalValidationFields.confirmPassword,
+      })
+      .superRefine((data, ctx) => {
+        generalValidationFields.matchFields({
+          original: "password",
+          copy: "confirmPassword",
+          data,
+          ctx,
+        });
+      }),
   });
 };
 export const resendconfirmEmail = (lang) => {
   return z.object({
     body: z.strictObject({
-      email: generalValidationFields.email(lang)
+      email: generalValidationFields.email(lang),
     }),
     query: z.object({}),
     headers: z.object({}),
-    params: z.object({})
+    params: z.object({}),
   });
 };

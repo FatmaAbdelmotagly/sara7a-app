@@ -9,7 +9,6 @@ export const createOne = async ({ model, data, options = {} } = {}) => {
 
   await doc.validate();
   // console.log({data});
-  
 
   return await doc.save();
 };
@@ -93,35 +92,30 @@ export const find = async ({
 
   return await query.exec();
 };
-export const countDocuments = async ({
-  filter = {},
-  model,
-} = {}) => {
- return await model.countDocuments(filter);
- 
+export const countDocuments = async ({ filter = {}, model } = {}) => {
+  return await model.countDocuments(filter);
 };
 export const paginate = async ({
   filter = {},
   options = {},
-page = 1,
-limit = 5 ,
+  page = 1,
+  limit = 5,
   model,
 } = {}) => {
-       const skip = (page -1 )*limit
- const docs = await countDocuments({model, filter})/limit
- const count = Math.ceil(docs/limit)
+  const skip = (page - 1) * limit;
+  const docs = (await countDocuments({ model, filter })) / limit;
+  const count = Math.ceil(docs / limit);
   const messages = await find({
-     model,
-     filter,
-     options:{
+    model,
+    filter,
+    options: {
       ...options,
-      limit , 
-      skip
-     }
-   });
- return {count  ,docs , currentPage : page  ,  messages}
+      limit,
+      skip,
+    },
+  });
+  return { count, docs, currentPage: page, messages };
 };
-
 
 //insertMany
 export const insertMany = async ({ data, model }) => {

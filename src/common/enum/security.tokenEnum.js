@@ -1,6 +1,4 @@
-
-
 export const TokenTypeEnum = {
-    ACCESS : 0,
-    REFREASH : 1
-}
+  ACCESS: 0,
+  REFREASH: 1,
+};

@@ -1,4 +1,3 @@
-
 import mongoose, { Schema, model } from "mongoose";
 import { StatusEnum } from "../../common/enum/status.enum.js";
 
@@ -24,9 +23,7 @@ const identityRequestSchema = new Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
-export const IdentityRequest = model("IdentityRequest",identityRequestSchema);
-
-
+export const IdentityRequest = model("IdentityRequest", identityRequestSchema);

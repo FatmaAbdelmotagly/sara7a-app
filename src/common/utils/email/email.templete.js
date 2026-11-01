@@ -1,9 +1,8 @@
-
 import { APPLICATION_NAME } from "../../../config.js";
 import { EmailSubjectEnum } from "../../enum/email.enum.js";
 
-export const templetes ={
-  [EmailSubjectEnum.CONFIRM_EMAIL] : (data)=>`
+export const templetes = {
+  [EmailSubjectEnum.CONFIRM_EMAIL]: (data) => `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -100,7 +99,7 @@ export const templetes ={
 </body>
 </html>
 `,
-  [EmailSubjectEnum.FORGET_PASSWORD] : (data)=>`
+  [EmailSubjectEnum.FORGET_PASSWORD]: (data) => `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -197,7 +196,7 @@ export const templetes ={
 </body>
 </html>
 `,
-[EmailSubjectEnum.TWO_STEP_VERIFICATION]: (data) => `
+  [EmailSubjectEnum.TWO_STEP_VERIFICATION]: (data) => `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -263,11 +262,9 @@ export const templetes ={
 </body>
 </html>
 `,
-}
+};
 
 export const verifyEmailTemplate = (data) => {
-
   const html = templetes[data.subject](data);
   return html;
 };
-

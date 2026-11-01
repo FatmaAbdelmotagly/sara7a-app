@@ -1,50 +1,49 @@
-import mongoose, { Query } from 'mongoose'
-import {file, optional, z} from 'zod'
-import { generalValidationFields } from '../../common/validation.js'
+import { z } from "zod";
+import { generalValidationFields } from "../../common/validation.js";
 
-export const createMessage =(lang)=>{
-
-    return z.object({
-        body : z.strictObject({
-            content : z.string().min(2).max(50000).optional(),
-            recieverId :generalValidationFields.Id(lang)
-        }),
-        files : z.array(generalValidationFields.file(lang)).max(3).optional()
-    }).superRefine((data , ctx)=>{
-        if(!data.body.content && !data.files?.length){
-            ctx.addIssue({
-                code : "custom",
-                path : ['content'],
-                message : "missing message content"
-            })
-        }
+export const createMessage = (lang) => {
+  return z
+    .object({
+      body: z.strictObject({
+        content: z.string().min(2).max(50000).optional(),
+        recieverId: generalValidationFields.Id(lang),
+      }),
+      files: z.array(generalValidationFields.file(lang)).max(3).optional(),
     })
-
-}
-
-export const deleteMessage =(lang)=>{
-    return z.object({
-        params : z.object({
-            messageId: generalValidationFields.Id(lang),
-        })
-})
-}
-
-export const getAllConversations = (lang) => {
-    return z.object({
-        query: z.object({
-            page: z.coerce.number().int().min(1).default(1),
-            limit: z.coerce.number().int().min(1).max(50).default(20)
-        })
+    .superRefine((data, ctx) => {
+      if (!data.body.content && !data.files?.length) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["content"],
+          message: "missing message content",
+        });
+      }
     });
 };
 
-export const allMessage =(lang)=>{
-    return z.object({
-        query : z.strictObject({
-            type: z.enum(["0", "1", "2"]).default("0"),
-            page : z.coerce.number().default(1),
-            limit : z.coerce.number().default(5)
-        })
-})
-}
+export const deleteMessage = (lang) => {
+  return z.object({
+    params: z.object({
+      messageId: generalValidationFields.Id(lang),
+    }),
+  });
+};
+
+export const getAllConversations = (lang) => {
+  return z.object({
+    query: z.object({
+      page: z.coerce.number().int().min(1).default(1),
+      limit: z.coerce.number().int().min(1).max(50).default(20),
+    }),
+  });
+};
+
+export const allMessage = (lang) => {
+  return z.object({
+    query: z.strictObject({
+      type: z.enum(["0", "1", "2"]).default("0"),
+      page: z.coerce.number().default(1),
+      limit: z.coerce.number().default(5),
+    }),
+  });
+};

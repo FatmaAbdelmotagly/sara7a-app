@@ -1,17 +1,16 @@
 import multer from "multer";
 import { randomUUID } from "node:crypto";
-import { mkdir, readFile, writeFile ,rename,rm} from "node:fs/promises";
+import { mkdir, writeFile, rename, rm } from "node:fs/promises";
 import { resolve } from "node:path";
 import { fileTypeFromBuffer } from "file-type";
 import { BadException } from "../../exceptions/error.exceptions.js";
-import { asyncWrapProviders } from "node:async_hooks";
 
 export const fileValidation = {
   image: ["image/jpeg", "image/png", "image/gif"],
   files: ["application/pdf", "application/json"],
 };
 
-export const localFileUpload = ({ maxFileSize = 5, validation = [] }={}) => {
+export const localFileUpload = ({ maxFileSize = 5, validation = [] } = {}) => {
   // const storage = multer.diskStorage({
   //     destination: function(req , file , cb){
   //         cb(null , './assets')
@@ -46,9 +45,9 @@ export const processFile = async ({
   validation = [],
 }) => {
   const result = await fileTypeFromBuffer(file.buffer);
-console.log("Original Name:", file.originalname);
-console.log("Multer Mime:", file.mimetype);
-console.log("Detected Type:", result);
+  console.log("Original Name:", file.originalname);
+  console.log("Multer Mime:", file.mimetype);
+  console.log("Detected Type:", result);
   if (!result || !validation.includes(result.mime)) {
     throw BadException("invalid file format");
   }
@@ -64,7 +63,6 @@ console.log("Detected Type:", result);
     await writeFile(resolve(`./${tempPath}`), file.buffer);
 
     return file;
-
   } catch (error) {
     await rm(resolve(`./${tempPath}`), {
       force: true,
@@ -95,10 +93,7 @@ export const commitFiles = async (files = []) => {
         recursive: true,
       });
 
-      await rename(
-        resolve(`./${file.path}`),
-        resolve(`./${finalPath}`)
-      );
+      await rename(resolve(`./${file.path}`), resolve(`./${finalPath}`));
 
       committedFiles.push(finalPath);
       file.path = finalPath;
@@ -146,10 +141,7 @@ export const processMulterUpload = async ({
     files = [req.file];
   } else if (Array.isArray(req.files)) {
     files = req.files;
-  } else if (
-    typeof req.files === "object" &&
-    req.files
-  ) {
+  } else if (typeof req.files === "object" && req.files) {
     files = Object.values(req.files).flat();
   }
 
@@ -157,16 +149,15 @@ export const processMulterUpload = async ({
 
   try {
     for (const file of files) {
-     processedFiles.push(file);
+      processedFiles.push(file);
 
-await processFile({
-  customPath,
-  file,
-  validation,
-});
+      await processFile({
+        customPath,
+        file,
+        validation,
+      });
     }
     await commitFiles(processedFiles);
-
   } catch (error) {
     await rollbackFiles(processedFiles);
     throw error;
@@ -174,31 +165,34 @@ await processFile({
 };
 
 export const uploadMiddleware = ({
-    isRequred = true,
+  isRequred = true,
   multerMiddleware,
   customPath = "general",
   validation = [],
 }) => {
   return (req, res, next) => {
-  multerMiddleware(req, res, async (error) => {
-    if (error) {
-        next(new Error(error.message, { cause: { status: 400 } }))
+    multerMiddleware(req, res, async (error) => {
+      if (error) {
+        next(new Error(error.message, { cause: { status: 400 } }));
         return;
-    }
-    
+      }
 
-    try {
-        if(isRequred &&( (!req.files.length && !Array.isArray(req.files))&& !req.file)&& !(typeof req.files == "object" && Object.keys(req.files)?.length)){
-        next(BadException("file is required"))
-         return;
-    }
-        await processMulterUpload({ customPath, validation, req })
-        next()
-    } catch (error) {
-        next(new Error(error.message, { cause: { status: 400 } }))
-
-    }
-
-})  
-}}
-
+      try {
+        if (
+          isRequred &&
+          !req.files.length &&
+          !Array.isArray(req.files) &&
+          !req.file &&
+          !(typeof req.files == "object" && Object.keys(req.files)?.length)
+        ) {
+          next(BadException("file is required"));
+          return;
+        }
+        await processMulterUpload({ customPath, validation, req });
+        next();
+      } catch (error) {
+        next(new Error(error.message, { cause: { status: 400 } }));
+      }
+    });
+  };
+};
