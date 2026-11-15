@@ -109,7 +109,7 @@ export const decodeToken = async ({
   if (!user) {
     throw notFoundException("user not found ");
   }
-  if (user.changeCredintialTime?.getTime() ?? 0 > payLoad.iat * 1000) {
+  if ((user.changeCredintialTime?.getTime() ?? 0 )> payLoad.iat * 1000) {
     throw UnauthorizedException("Expired login credintials");
   }
   return { user, payLoad };
