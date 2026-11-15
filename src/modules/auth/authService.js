@@ -145,7 +145,7 @@ export const signupWithGmail = async ({ idToken }, issuer) => {
       confirmEmail: Date.now(),
       email,
       username: name,
-      Image: picture,
+      image: picture,
     },
   });
 

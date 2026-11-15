@@ -26,7 +26,7 @@ router.get("/", authentication(), async (req, res, next) => {
 router.patch(
   "/",
   authentication(),
-  authorization(RoleEnum.ADMIN),
+  authorization(RoleEnum.USER),
   async (req, res, next) => {
     const data = await update(req.user, req.body);
     successResponse({ res, status: 201, data });

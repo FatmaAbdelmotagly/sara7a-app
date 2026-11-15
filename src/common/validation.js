@@ -38,6 +38,7 @@ export const generalValidationFields = {
       });
   },
   phone: z.e164(),
+  age : z.number(),
   gender: z.enum(GenderEnum),
   otp: z.string().regex(/^\d{6}$/, { error: "invalid code" }),
   confirmPassword: z

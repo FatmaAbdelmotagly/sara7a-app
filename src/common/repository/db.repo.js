@@ -103,9 +103,8 @@ export const paginate = async ({
   model,
 } = {}) => {
   const skip = (page - 1) * limit;
-  const docs = (await countDocuments({ model, filter })) / limit;
-  const count = Math.ceil(docs / limit);
-  const messages = await find({
+  const total = await countDocuments({ model, filter });
+   const messages = await find({
     model,
     filter,
     options: {
@@ -114,7 +113,7 @@ export const paginate = async ({
       skip,
     },
   });
-  return { count, docs, currentPage: page, messages };
+return { total, totalPages: Math.ceil(total / limit), currentPage: page, messages };
 };
 
 //insertMany

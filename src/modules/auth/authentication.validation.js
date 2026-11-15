@@ -19,6 +19,7 @@ export const signup = (lang) => {
   return z.object({
     body: loginSchema(lang)
       .safeExtend({
+        age : generalValidationFields.age,
         username: generalValidationFields.username(lang),
         confirmPassword: generalValidationFields.confirmPassword,
         phone: generalValidationFields.phone,
