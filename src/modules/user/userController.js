@@ -6,6 +6,7 @@ import {
   cacheProfile,
   logout,
   profile,
+  publicProfile,
   rotate,
   update,
 } from "./userService.js";
@@ -22,6 +23,10 @@ import {
 router.get("/", authentication(), async (req, res, next) => {
   const data = await profile(req.user);
   successResponse({ res, status: 201, data });
+});
+router.get("/public-profile/:userId", async (req, res, next) => {
+  const data = await publicProfile(req.params.userId);
+  successResponse({ res, status: 200, data });
 });
 router.patch(
   "/",

@@ -16,8 +16,6 @@ import {
 import { messageModel } from "../../DB/Model/messageModel.js";
 import { IdentityRequest } from "../../DB/Model/identityRequest.model.js";
 import { StatusEnum } from "../../common/enum/status.enum.js";
-import { UserModel } from "../../DB/Model/userModel.js";
-import { decryption } from "../../common/security/encryption.security.js";
 import { createConversation } from "../conversation/conversation.service.js";
 
 export const requestIdentity = async ({ messageId } = {}, user) => {
@@ -25,7 +23,9 @@ export const requestIdentity = async ({ messageId } = {}, user) => {
   if (!message) {
     throw notFoundException("Message id not found");
   }
-
+if (!message.senderId) {
+  throw BadException("this message is not linked to an account");
+}
   if (user._id.toString() != message.recieverId.toString()) {
     throw forbiddenException("You are not allowed to request this identity");
   }
@@ -47,6 +47,7 @@ export const requestIdentity = async ({ messageId } = {}, user) => {
       status: StatusEnum.PENDING,
     },
   });
+
 
   return request;
 };
@@ -72,31 +73,24 @@ export const respondToIdentityRequest = async (
   if (!message) {
     throw notFoundException("Message not found");
   }
-  if (message.senderId.toString() != user._id.toString()) {
+  if (!message.senderId || message.senderId.toString() != user._id.toString()) {
     throw forbiddenException("You are not allowed to respond to this request");
   }
+
+  const newStatus = Number(status);
   const result = await updateOne({
     model: IdentityRequest,
     filter: { messageId, status: StatusEnum.PENDING },
-    update: { status },
+    update: { status: newStatus },
   });
-  if (status == StatusEnum.ACCEPTED) {
-    const requesterData = await findOne({
-      model: UserModel,
-      filter: { _id: message.senderId },
-    });
-    const phone = await decryption(requesterData.phone);
+
+  if (newStatus === StatusEnum.ACCEPTED) {
     const conversation = await createConversation(request._id);
-    return {
-      result,
-      conversation,
-      user: { email: requesterData.email, name: requesterData.username, phone },
-    };
+    return { result, conversation };
   }
 
   return result;
 };
-
 export const getAllIdentityRequests = async ({ page, limit } = {}, user) => {
   const messages = await find({
     model: messageModel,

@@ -1,5 +1,5 @@
 import { UserModel } from "../../DB/Model/userModel.js";
-import { findByIdAndUpdate } from "../../common/repository/db.repo.js";
+import { findById, findByIdAndUpdate } from "../../common/repository/db.repo.js";
 import {
   createLoginCredentials,
   createRevokeToken,
@@ -28,6 +28,18 @@ export const profile = async (account) => {
   });
 
   return account;
+};
+
+export const publicProfile = async (userId) => {
+  const user = await findById({
+    model: UserModel,
+    id: userId,
+    options: { select: "username image", lean: true },
+  });
+  if (!user) {
+    throw notFoundException("user not found");
+  }
+  return { user: { _id: user._id, username: user.username, image: user.image } };
 };
 export const cacheProfile = async (user) => {
   const key = UserprofileKey({ user: user._id });
